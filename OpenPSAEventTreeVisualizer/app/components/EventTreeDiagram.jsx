@@ -1,15 +1,22 @@
+'use client'
+
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
 const EventTreeDiagram = () => {
   const [eventTree, setEventTree] = useState(null);
+  const [error, setError] = useState(null);
   
   useEffect(() => {
     const parseEventTree = async () => {
       try {
-        const response = await window.fs.readFile('event.xml', { encoding: 'utf8' });
+        const response = await fetch('/event.xml');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const xmlText = await response.text();
         const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(response, 'text/xml');
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
         
         // Find EQK-BIN1 event tree
         const eventTreeElement = xmlDoc.querySelector('define-event-tree[name="EQK-BIN1"]');
@@ -18,7 +25,7 @@ const EventTreeDiagram = () => {
           const functionalEvents = Array.from(eventTreeElement.querySelectorAll('define-functional-event'))
             .map(event => ({
               name: event.getAttribute('name'),
-              label: event.querySelector('label').textContent
+              label: event.querySelector('label')?.textContent || ''
             }));
             
           // Extract sequences and paths
@@ -26,9 +33,13 @@ const EventTreeDiagram = () => {
           const paths = extractPaths(initialState);
           
           setEventTree({ functionalEvents, paths });
+          setError(null);
+        } else {
+          setError('Could not find EQK-BIN1 event tree in the XML');
         }
       } catch (error) {
         console.error('Error parsing XML:', error);
+        setError(`Error parsing the XML file: ${error.message}`);
       }
     };
     
