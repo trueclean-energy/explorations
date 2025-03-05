@@ -19,7 +19,10 @@ pip install -r requirements.txt
 ```
 WEATHER_API_KEY=your_openweather_or_weatherapi_key
 BRAVE_API_KEY=your_brave_search_key
+LLM_PROVIDER=together  # or openrouter
+LLM_MODEL=mistralai/Mixtral-8x7B-Instruct-v0.1  # or another supported model
 TOGETHER_API_KEY=your_together_api_key
+OPENROUTER_API_KEY=your_openrouter_api_key
 ```
 
 ## Usage
@@ -44,6 +47,95 @@ python agent.py --list-tools
 
 # Run with verbose LLM logging
 VERBOSE_LLM=1 python agent.py
+
+# Specify LLM provider and model
+python agent.py --provider openrouter --model deepseek/deepseek-r1:free
+```
+
+## LLM Client
+
+The agent uses a flexible LLM client that supports multiple providers and models. You can easily switch between providers and models by modifying the configuration.
+
+### Supported Providers
+
+- **Together AI**: Default provider with models like Mixtral and Llama 2
+- **OpenRouter**: Alternative provider with models like DeepSeek R1
+
+### Switching Providers and Models
+
+You can switch providers and models in your code:
+
+```python
+from llm import LLMClient
+
+# Use Together AI with Mixtral (default)
+llm = LLMClient()
+
+# Use Together AI with Llama 2
+llm = LLMClient(provider="together", model="meta-llama/Llama-2-70b-chat")
+
+# Use OpenRouter with DeepSeek R1
+llm = LLMClient(provider="openrouter", model="deepseek/deepseek-r1:free")
+```
+
+### Example Usage
+
+Try the example script to see how to use different providers and models:
+
+```bash
+# Use default provider (Together) and model (Mixtral)
+python example_llm.py
+
+# Use Together AI with default model
+python example_llm.py together
+
+# Use Together AI with Llama 2 model
+python example_llm.py together meta-llama/Llama-2-70b-chat
+
+# Use OpenRouter with default model (DeepSeek R1)
+python example_llm.py openrouter
+
+# Use OpenRouter with DeepSeek R1 model
+python example_llm.py openrouter deepseek/deepseek-r1:free
+```
+
+## LLM-Enhanced Search
+
+The agent uses a sophisticated approach to generate weather-appropriate activity suggestions:
+
+1. **Weather Analysis**: The agent analyzes current weather conditions (temperature and conditions).
+
+2. **LLM-Generated Search Terms**: The LLM generates specific search terms based on the weather conditions.
+   - For rainy weather: "indoor museum gallery theater"
+   - For hot weather: "air-conditioned indoor aquarium mall"
+   - For cold weather: "indoor warm cozy museum"
+   - For pleasant weather: "outdoor park garden walking"
+
+3. **Enhanced Search Query**: These terms are combined with the city name to create a targeted search query.
+
+4. **Activity Suggestion**: The LLM analyzes both the weather conditions and search results to suggest a specific activity.
+
+This approach provides more contextually relevant and weather-appropriate suggestions than traditional rule-based methods.
+
+### Operation Settings
+
+The LLM client uses operation-specific settings for optimal performance:
+
+```python
+OPERATION_SETTINGS = {
+    "verify_city": {
+        "temperature": 0.1,  # Low temperature for factual city validation
+        "max_tokens": 100    # Short responses needed
+    },
+    "search_terms": {
+        "temperature": 0.3,  # Low temperature for focused search terms
+        "max_tokens": 50     # Very short response needed
+    },
+    "suggest_activity": {
+        "temperature": 0.2,  # Low temperature for factual suggestions
+        "max_tokens": 250    # Longer response for detailed suggestions
+    }
+}
 ```
 
 ## Project Structure
@@ -59,6 +151,7 @@ SampleAgent/
 ├── cost_tracker.py       # Token usage and cost tracking
 ├── llm.py               # LLM client implementation
 ├── tool_registry.py     # Tool registration and management
+├── example_llm.py       # Example of using the LLM client
 ├── weather_agent.db     # SQLite database for interactions
 ├── requirements.txt     # Dependencies
 ├── .env                 # API keys (create this)
@@ -73,12 +166,26 @@ SampleAgent/
 - Rate limit handling and error recovery
 - Automated testing and evaluation framework
 - Transparent LLM usage with token counts and cost tracking
+- Support for multiple LLM providers and models
 
 ## Troubleshooting
 
 - If you get API errors, verify your API keys in `.env`
 - For rate limit errors, wait a few minutes and try again
 - For model errors, try using a different model with `--list-models`
+
+## Token Usage and Cost Tracking
+
+The agent provides transparent information about LLM usage:
+
+- Each LLM call shows token usage and cost: `💰 LLM call: 350 tokens (300 input, 50 output) - Cost: $0.00021`
+- The thinking process is indicated with: `🤔 Thinking: Analyzing weather conditions...`
+- Final usage statistics are shown when exiting the agent
+- Set `VERBOSE_LLM=1` for more detailed logging
+
+## License
+
+MIT License - See LICENSE file for details
 
 ## Development and Testing
 

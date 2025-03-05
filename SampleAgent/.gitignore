@@ -58,6 +58,6 @@ Thumbs.db
 # Logs
 *.log
 logs/
-
+working
 # Local configuration
 config.local.json
