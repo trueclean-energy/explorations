@@ -41,7 +41,8 @@ class BraveSearch:
         if not query or len(query.strip()) < 3:
             return None
             
-        print(f"🔍 Searching Brave: '{query}'")
+        # Log the search query without duplicating what the activity suggester already logged
+        print(f"🔍 Executing Brave Search API call for: '{query}'")
         
         try:
             response = requests.get(
@@ -62,10 +63,17 @@ class BraveSearch:
                     ]
                     
                     if filtered_results:
+                        print(f"✓ Found {len(filtered_results)} relevant results")
                         return filtered_results[0]["description"]
+                    else:
+                        print("⚠️ No relevant results after filtering")
+                else:
+                    print("⚠️ No results found in API response")
             elif response.status_code == 429:
                 print("⚠️ Rate limit hit, waiting before retry...")
                 time.sleep(2)
+            else:
+                print(f"⚠️ API returned status code: {response.status_code}")
             return None
         except Exception as e:
             print(f"❌ Brave Search error: {e}")
@@ -125,6 +133,7 @@ class BraveSearch:
         result = self.search(query)
         if not result:  # If first search fails, try a simpler query
             query = f"most famous landmark {city}"
+            print(f"Debug: Fallback query = {query}")
             result = self.search(query)
         
         if result:

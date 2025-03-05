@@ -27,8 +27,8 @@ class WeatherAgentToolRegistry(ToolRegistry):
         
         # Initialize LLM client for activity suggester
         llm_client = LLMClient(
-            provider="together",
-            model=os.getenv("TOGETHER_MODEL") or "mistralai/Mixtral-8x7B-Instruct-v0.1"
+            provider=os.getenv("LLM_PROVIDER") or "together",
+            model=os.getenv("LLM_MODEL") or "mistralai/Mixtral-8x7B-Instruct-v0.1"
         )
         
         # Initialize activity suggester
@@ -85,7 +85,7 @@ class WeatherAgentToolRegistry(ToolRegistry):
         
         self.register_tool(Tool(
             name="get_activity_suggestion",
-            description="Get weather-appropriate activity suggestions for a location",
+            description="Get weather-appropriate activity suggestions for a location using LLM-enhanced search",
             category=ToolCategory.EXTERNAL_API,
             function=activity_suggester.get_activity_suggestion,
             parameters={
@@ -125,7 +125,7 @@ class WeatherAgentToolRegistry(ToolRegistry):
             raise ValueError(f"Unsupported weather provider: {provider_name}")
 
 class WeatherAgent:
-    def __init__(self, weather_provider_name="openweather", llm_model=None):
+    def __init__(self, weather_provider_name="openweather", llm_model=None, llm_provider=None):
         # Handle list models request before initializing LLM
         if llm_model == "list":
             print("\nAvailable LLM models:")
@@ -133,13 +133,13 @@ class WeatherAgent:
                 print(f"→ {model} (${details['cost']['input']}/1K input tokens)")
             return
             
-        # Use Together AI with optional model selection
+        # Use specified provider with optional model selection
         self.llm = LLMClient(
-            provider="together",
-            model=llm_model or os.getenv("TOGETHER_MODEL") or "mistralai/Mixtral-8x7B-Instruct-v0.1"  # Ensure default model
+            provider=llm_provider or os.getenv("LLM_PROVIDER") or "together",
+            model=llm_model or os.getenv("LLM_MODEL") or "mistralai/Mixtral-8x7B-Instruct-v0.1"  # Ensure default model
         )
         
-        print(f"\nUsing LLM Model: {self.llm.model}")
+        print(f"\nUsing LLM Model: {self.llm.model} via {self.llm.provider}")
         
         # Initialize tool registry (which will set up weather provider and other tools)
         os.environ['WEATHER_PROVIDER'] = weather_provider_name
@@ -549,15 +549,20 @@ if __name__ == "__main__":
     
     while True:
         try:
-            query = input("\nAsk about the weather (or type 'exit' to quit): ")
+            query = input("\nAsk about the weather (or type 'exit' to quit): ").strip()
+            
+            # Check for exit command first
             if query.lower() == 'exit':
-                # Print final usage statistics
                 print("\nFinal Usage Statistics:")
                 agent.llm.cost_tracker.print_detailed_summary()
                 print("\nThank you for using the Weather Agent! Goodbye.")
                 break
-            response = agent.process_query(query)
-            print(response)
+            
+            # Only process non-empty queries
+            if query:
+                response = agent.process_query(query)
+                print(response)
+        
         except KeyboardInterrupt:
             print("\nExiting...")
             print("\nFinal Usage Statistics:")

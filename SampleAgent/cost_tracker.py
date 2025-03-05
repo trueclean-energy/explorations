@@ -18,7 +18,8 @@ class CostTracker:
         # Cost per 1K tokens (in USD)
         self.COST_PER_1K = {
             "mistralai/Mixtral-8x7B-Instruct-v0.1": {"input": 0.0006, "output": 0.0006},
-            "meta-llama/Llama-2-70b-chat": {"input": 0.0009, "output": 0.0009}
+            "meta-llama/Llama-2-70b-chat": {"input": 0.0009, "output": 0.0009},
+            "deepseek/deepseek-r1:free": {"input": 0.0005, "output": 0.0005}  # Estimated cost, adjust as needed
         }
     
     def log_call(self, operation: str, prompt: str, response: str) -> Dict:
