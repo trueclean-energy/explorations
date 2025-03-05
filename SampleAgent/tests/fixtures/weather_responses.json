@@ -1,0 +1,104 @@
+{
+    "openweather": {
+        "success": {
+            "London": {
+                "main": {
+                    "temp": 15.5,
+                    "humidity": 75
+                },
+                "weather": [
+                    {
+                        "description": "light rain"
+                    }
+                ]
+            },
+            "Dubai": {
+                "main": {
+                    "temp": 35.2,
+                    "humidity": 45
+                },
+                "weather": [
+                    {
+                        "description": "clear sky"
+                    }
+                ]
+            },
+            "Seattle": {
+                "main": {
+                    "temp": 7.05,
+                    "humidity": 82
+                },
+                "weather": [
+                    {
+                        "description": "scattered clouds"
+                    }
+                ]
+            }
+        },
+        "errors": {
+            "not_found": {
+                "cod": "404",
+                "message": "city not found"
+            },
+            "rate_limit": {
+                "cod": 429,
+                "message": "Rate limit exceeded"
+            },
+            "invalid_key": {
+                "cod": 401,
+                "message": "Invalid API key"
+            }
+        }
+    },
+    "weatherapi": {
+        "success": {
+            "London": {
+                "current": {
+                    "temp_c": 15.5,
+                    "humidity": 75,
+                    "condition": {
+                        "text": "Light rain"
+                    }
+                }
+            },
+            "Dubai": {
+                "current": {
+                    "temp_c": 35.2,
+                    "humidity": 45,
+                    "condition": {
+                        "text": "Sunny"
+                    }
+                }
+            },
+            "Seattle": {
+                "current": {
+                    "temp_c": 7.05,
+                    "humidity": 82,
+                    "condition": {
+                        "text": "Partly cloudy"
+                    }
+                }
+            }
+        },
+        "errors": {
+            "not_found": {
+                "error": {
+                    "code": 1006,
+                    "message": "No matching location found"
+                }
+            },
+            "rate_limit": {
+                "error": {
+                    "code": 2008,
+                    "message": "API rate limit exceeded"
+                }
+            },
+            "invalid_key": {
+                "error": {
+                    "code": 2006,
+                    "message": "API key is invalid"
+                }
+            }
+        }
+    }
+} 

@@ -1,0 +1,181 @@
+{
+  "test_cases": [
+    {
+      "query": "What's the weather in Seattle?",
+      "expected": {
+        "city": "Seattle",
+        "known_attractions": [
+          "Space Needle",
+          "Pike Place Market",
+          "Museum of Pop Culture",
+          "Chihuly Garden",
+          "Seattle Art Museum",
+          "Pacific Science Center"
+        ],
+        "weather_appropriate_terms": [
+          "indoor",
+          "museum",
+          "aquarium",
+          "gallery"
+        ]
+      },
+      "weather_data": {
+        "temp": 7.05,
+        "conditions": "scattered clouds"
+      }
+    },
+    {
+      "query": "Weather in Dubai",
+      "expected": {
+        "city": "Dubai",
+        "known_attractions": [
+          "Burj Khalifa",
+          "Dubai Mall",
+          "Dubai Aquarium",
+          "Dubai Museum",
+          "Gold Souk"
+        ],
+        "weather_appropriate_terms": [
+          "indoor",
+          "air-conditioned",
+          "mall",
+          "museum"
+        ]
+      },
+      "weather_data": {
+        "temp": 35,
+        "conditions": "clear sky"
+      }
+    },
+    {
+      "query": "Current weather in Tokyo",
+      "expected": {
+        "city": "Tokyo",
+        "known_attractions": [
+          "Tokyo Skytree",
+          "Senso-ji Temple",
+          "Tokyo Tower",
+          "Ueno Park",
+          "Tokyo National Museum"
+        ],
+        "weather_appropriate_terms": [
+          "indoor",
+          "outdoor",
+          "park",
+          "museum"
+        ]
+      },
+      "weather_data": {
+        "temp": 18,
+        "conditions": "clear"
+      }
+    },
+    {
+      "query": "How's the weather in London?",
+      "expected": {
+        "city": "London",
+        "known_attractions": [
+          "Big Ben",
+          "Tower Bridge",
+          "British Museum",
+          "London Eye",
+          "Buckingham Palace"
+        ],
+        "weather_appropriate_terms": [
+          "indoor",
+          "museum",
+          "gallery"
+        ]
+      },
+      "weather_data": {
+        "temp": 12,
+        "conditions": "light rain"
+      }
+    },
+    {
+      "query": "Weather conditions in NonexistentCity123",
+      "expected": {
+        "city": "NonexistentCity123",
+        "error": true,
+        "error_message": "Could not find weather data"
+      }
+    },
+    {
+      "query": "",
+      "expected": {
+        "error": true,
+        "error_message": "No city specified"
+      }
+    },
+    {
+      "query": "What's the weather in New York?",
+      "expected": {
+        "city": "New York",
+        "known_attractions": [
+          "Empire State Building",
+          "Central Park",
+          "Metropolitan Museum",
+          "Times Square",
+          "Statue of Liberty"
+        ],
+        "weather_appropriate_terms": [
+          "indoor",
+          "outdoor",
+          "park",
+          "museum"
+        ]
+      },
+      "weather_data": {
+        "temp": -2,
+        "conditions": "snow"
+      }
+    },
+    {
+      "query": "Weather in Singapore",
+      "expected": {
+        "city": "Singapore",
+        "known_attractions": [
+          "Gardens by the Bay",
+          "Marina Bay Sands",
+          "Singapore Zoo",
+          "ArtScience Museum",
+          "National Gallery"
+        ],
+        "weather_appropriate_terms": [
+          "indoor",
+          "air-conditioned",
+          "museum",
+          "mall"
+        ]
+      },
+      "weather_data": {
+        "temp": 32,
+        "conditions": "clear"
+      }
+    },
+    {
+      "query": "What's the weather in Agra?",
+      "expected": {
+        "city": "Agra",
+        "known_attractions": [
+          "Taj Mahal",
+          "Agra Fort",
+          "Fatehpur Sikri",
+          "Akbar's Tomb",
+          "Mehtab Bagh"
+        ],
+        "weather_appropriate_terms": [
+          "monument",
+          "palace",
+          "fort",
+          "garden",
+          "heritage site"
+        ]
+      },
+      "weather_data": {
+        "temp": 22.38,
+        "conditions": "clear sky"
+      }
+    }
+  ]
+} 
