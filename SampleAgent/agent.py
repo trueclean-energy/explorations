@@ -6,8 +6,9 @@ import json
 import sqlite3  # Added for simpler local database
 from dotenv import load_dotenv
 from llm import LLMClient  # Import the LLM client
-from weather_providers import OpenWeatherProvider, WeatherAPIProvider
-from brave_search import BraveSearch
+from tools.weather_providers import OpenWeatherProvider, WeatherAPIProvider
+from tools.brave_search import BraveSearch
+from weather_agent_tools import WeatherAgentToolRegistry
 
 load_dotenv()
 
@@ -29,16 +30,15 @@ class WeatherAgent:
         
         print(f"\nUsing LLM Model: {self.llm.model}")
         
-        # Initialize weather provider
-        if weather_provider_name == "openweather":
-            self.weather_provider = OpenWeatherProvider(os.getenv('WEATHER_API_KEY'))
-        elif weather_provider_name == "weatherapi":
-            self.weather_provider = WeatherAPIProvider(os.getenv('WEATHER_API_KEY'))
-        else:
-            raise ValueError(f"Unsupported weather provider: {weather_provider_name}")
+        # Initialize tool registry (which will set up weather provider and other tools)
+        os.environ['WEATHER_PROVIDER'] = weather_provider_name
+        self.tool_registry = WeatherAgentToolRegistry()
+        
+        # Keep direct references for backward compatibility
+        self.weather_provider = self.tool_registry._get_weather_provider()
+        self.brave = BraveSearch(os.getenv('BRAVE_API_KEY'))
         
         self.db = self._init_db()
-        self.brave = BraveSearch(os.getenv('BRAVE_API_KEY'))
     
     """
     # PostgreSQL implementation - commented out in favor of simpler SQLite
@@ -95,21 +95,27 @@ class WeatherAgent:
         
         print(f"→ Target location: {city}")
         
-        # 3. Execution
+        # 3. Execution using tool registry
         print("\nStep 3: Retrieving weather information")
         if intent == "current":
             print(f"→ Fetching current weather for {city}...")
-            result = self.weather_provider.get_current_weather(city)
-            if result['temp'] == 'unknown':
-                print("→ Could not retrieve weather data from API")
-                response = f"I'm sorry, I couldn't get the current weather for {city}."
-            else:
-                print(f"→ Successfully retrieved weather data: {result['temp']}°C, {result['conditions']}")
-                response = f"Current weather in {city}: {result['temp']}°C, {result['conditions']}"
-                
-                # Add activity suggestion
-                if suggestion := self.brave.get_activity_suggestion(city, result):
-                    response += suggestion
+            weather_tool = self.tool_registry.get_tool("get_current_weather")
+            try:
+                result = weather_tool.execute(city=city)
+                if result['temp'] == 'unknown':
+                    print("→ Could not retrieve weather data from API")
+                    response = f"I'm sorry, I couldn't get the current weather for {city}."
+                else:
+                    print(f"→ Successfully retrieved weather data: {result['temp']}°C, {result['conditions']}")
+                    response = f"Current weather in {city}: {result['temp']}°C, {result['conditions']}"
+                    
+                    # Add activity suggestion using tool registry
+                    activity_tool = self.tool_registry.get_tool("get_activity_suggestion")
+                    if suggestion := activity_tool.execute(city=city, weather=result):
+                        response += suggestion
+            except Exception as e:
+                print(f"Error using weather tool: {e}")
+                response = f"I'm sorry, I encountered an error getting weather for {city}."
         elif intent == "history":
             print("→ Historical weather functionality is not implemented yet")
             response = f"I'm sorry, I don't have access to historical weather data for {city} yet."
