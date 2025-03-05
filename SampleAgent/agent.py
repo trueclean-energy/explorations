@@ -15,18 +15,18 @@ load_dotenv()
 
 class WeatherAgent:
     def __init__(self, weather_provider_name="openweather", llm_model=None):
+        # Handle list models request before initializing LLM
+        if llm_model == "list":
+            print("\nAvailable LLM models:")
+            for model, details in LLMClient.MODELS.items():
+                print(f"→ {model} (${details['cost']['input']}/1K input tokens)")
+            return
+            
         # Use Together AI with optional model selection
         self.llm = LLMClient(
             provider="together",
             model=llm_model or os.getenv("TOGETHER_MODEL") or "mistralai/Mixtral-8x7B-Instruct-v0.1"  # Ensure default model
         )
-        
-        # Print available models if requested
-        if llm_model == "list":
-            print("\nAvailable LLM models:")
-            for model, details in self.llm.MODELS.items():
-                print(f"→ {model} (${details['cost']['input']}/1K input tokens)")
-            return
         
         print(f"\nUsing LLM Model: {self.llm.model}")
         
@@ -196,6 +196,21 @@ if __name__ == "__main__":
     # Show available models if requested
     if "--list-models" in sys.argv:
         WeatherAgent(llm_model="list")
+        sys.exit(0)
+    
+    # Show available tools if requested
+    if "--list-tools" in sys.argv:
+        agent = WeatherAgent()
+        print("\nAvailable Tools:")
+        print("===============")
+        for tool in agent.tool_registry.list_tools():
+            print(f"\n→ {tool['name']}")
+            print(f"  Description: {tool['description']}")
+            print(f"  Category: {tool['category']}")
+            print("  Parameters:")
+            for param_name, param_info in tool['parameters'].items():
+                required = "required" if param_name in tool['required_params'] else "optional"
+                print(f"    - {param_name} ({required}): {param_info['description']}")
         sys.exit(0)
     
     # Get model from environment or use default
