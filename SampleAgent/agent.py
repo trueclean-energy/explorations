@@ -14,13 +14,15 @@ from typing import Optional
 
 load_dotenv()
 
+# ===== TOOL REGISTRY LAYER =====
+# The tool registry serves as a catalog of capabilities that the agent can reason about and utilize
 class WeatherAgentToolRegistry(ToolRegistry):
     def __init__(self):
         super().__init__()
         self._initialize_tools()
     
     def _initialize_tools(self) -> None:
-        """Initialize and register all tools"""
+        """Initialize and register all tools that the agent can use for reasoning and execution"""
         # Initialize service providers
         weather_provider = self._get_weather_provider()
         brave_search = BraveSearch(os.getenv('BRAVE_API_KEY'))
@@ -83,6 +85,7 @@ class WeatherAgentToolRegistry(ToolRegistry):
             required_params=["query"]
         ))
         
+        # Register activity suggestion tool - combines weather data with search to provide recommendations
         self.register_tool(Tool(
             name="get_activity_suggestion",
             description="Get weather-appropriate activity suggestions for a location using LLM-enhanced search",
@@ -124,6 +127,8 @@ class WeatherAgentToolRegistry(ToolRegistry):
         else:
             raise ValueError(f"Unsupported weather provider: {provider_name}")
 
+# ===== AGENT LAYER =====
+# The main agent class that implements the reasoning layer and orchestrates the tools
 class WeatherAgent:
     def __init__(self, weather_provider_name="openweather", llm_model=None, llm_provider=None):
         # Handle list models request before initializing LLM
@@ -199,16 +204,18 @@ class WeatherAgent:
             ''')
         return conn
     
+    # ===== REASONING LAYER =====
+    # This is the core reasoning layer that processes user queries and orchestrates tool selection
     def process_query(self, query):
         print(f"\nProcessing: {query}")
         print("-----------------------------------")
         
-        # 1. Intent detection
+        # 1. Intent detection - First reasoning step: understand what the user is asking for
         print("\n🤔 Thinking: Understanding what weather information you need...")
         intent = self._detect_intent(query)
         print(f"→ Detected intent: {intent}")
         
-        # 2. City extraction
+        # 2. Entity extraction - Second reasoning step: identify the location in the query
         print("\n🤔 Thinking: Identifying the location you're asking about...")
         city = self._extract_city(query)
         if not city:
@@ -218,13 +225,15 @@ class WeatherAgent:
         
         print(f"→ Target location: {city}")
         
-        # 3. Execution using tool registry
+        # 3. Tool selection and execution - Third reasoning step: select and use appropriate tools
         print("\nStep 3: Retrieving weather information")
         if intent == "current":
+            # Dynamic tool selection based on intent - current weather
             print(f"→ Fetching current weather for {city}...")
             weather_tool = self.tool_registry.get_tool("get_current_weather")
             try:
                 print("🔧 Using tool: get_current_weather")
+                # Tool execution with extracted parameters
                 result = weather_tool.execute(city=city)
                 # Track API call
                 self.api_calls["weather"] += 1
@@ -237,7 +246,7 @@ class WeatherAgent:
                     print(f"→ Successfully retrieved weather data: {result['temp']}°C, {result['conditions']}")
                     response = f"Current weather in {city}: {result['temp']}°C, {result['conditions']}"
                     
-                    # Use the activity suggester for current weather
+                    # Tool chaining - using a second tool based on the results of the first
                     print("🔧 Using tool: get_activity_suggestion")
                     if suggestion := self.activity_suggester.get_activity_suggestion(city, result, is_forecast=False):
                         response += suggestion
@@ -256,13 +265,14 @@ class WeatherAgent:
                 print(f"Error using weather tool: {e}")
                 response = f"I'm sorry, I encountered an error getting weather for {city}."
         elif intent == "forecast":
-            # Extract time reference from query
+            # Dynamic tool selection based on intent - forecast weather
+            # Extract time reference from query - additional parameter extraction
             time_reference = re.search(r'\b(tomorrow|next|upcoming|this weekend|next week|future)\b', query.lower())
             time_phrase = time_reference.group(0) if time_reference else "the future"
             
             print(f"→ User requested forecast for {city} for {time_phrase}")
             
-            # Determine number of days based on time phrase
+            # Determine number of days based on time phrase - reasoning about parameters
             if "weekend" in time_phrase:
                 # Calculate days until weekend (Saturday and Sunday)
                 from datetime import datetime, timedelta
@@ -292,7 +302,7 @@ class WeatherAgent:
             else:
                 forecast_days = 5  # Default to 5-day forecast
                 
-            # Get forecast
+            # Get forecast - tool selection and execution
             forecast_tool = self.tool_registry.get_tool("get_weather_forecast")
             try:
                 print("🔧 Using tool: get_weather_forecast")
@@ -304,7 +314,7 @@ class WeatherAgent:
                 if not forecasts:
                     response = f"I'm sorry, I couldn't get the weather forecast for {city}."
                 else:
-                    # Format the forecast response based on the time phrase
+                    # Format the forecast response based on the time phrase - reasoning about response format
                     if "weekend" in time_phrase:
                         # Weekend forecast - find the correct dates for Saturday and Sunday
                         weekend_forecasts = []
@@ -357,7 +367,7 @@ class WeatherAgent:
                         for day in forecasts:
                             response += f"• {day['date']}: {day['min_temp']}°C to {day['max_temp']}°C, {day['conditions']}\n"
                     
-                    # Add activity suggestion for the first day of forecast
+                    # Tool chaining - using activity suggester based on forecast data
                     if forecasts:
                         first_day = forecasts[0]
                         weather_data = {
@@ -410,6 +420,8 @@ class WeatherAgent:
         
         return response
     
+    # ===== INTENT DETECTION =====
+    # Simple rule-based intent detection - part of the reasoning layer
     def _detect_intent(self, query):
         # Simple rule-based approach for maximum transparency
         query = query.lower()
@@ -424,6 +436,8 @@ class WeatherAgent:
         print("No specific time reference found, defaulting to current weather")
         return "current"
     
+    # ===== ENTITY EXTRACTION =====
+    # City extraction with LLM verification - part of the reasoning layer
     def _extract_city(self, query):
         """Extract city name from query with better accuracy"""
         # First try pattern matching
@@ -439,7 +453,7 @@ class WeatherAgent:
                 candidate_city = ' '.join(word.capitalize() for word in match.group(1).split())
                 break
         
-        # Always verify with LLM
+        # Always verify with LLM - using LLM for entity verification
         print("\n🤔 Thinking: Verifying if this is a valid city name...")
         print("🧠 Using language model API for city verification")
         verify_prompt = (
@@ -516,6 +530,7 @@ class WeatherAgent:
         print("❌ Could not verify city name")
         return None
 
+# ===== MAIN EXECUTION =====
 if __name__ == "__main__":
     import sys
     
@@ -547,6 +562,7 @@ if __name__ == "__main__":
     print("Type 'exit' to quit, or ask about the weather.")
     print("Example: 'What's the weather in Tokyo?'")
     
+    # Main interaction loop
     while True:
         try:
             query = input("\nAsk about the weather (or type 'exit' to quit): ").strip()
