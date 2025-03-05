@@ -1,0 +1,69 @@
+{
+    "success": {
+        "seattle_attractions": {
+            "web": {
+                "results": [
+                    {
+                        "title": "Space Needle",
+                        "description": "Visit the iconic Space Needle, Seattle's most famous landmark and observation tower offering panoramic views of the city."
+                    },
+                    {
+                        "title": "Pike Place Market",
+                        "description": "Explore Pike Place Market, Seattle's historic farmers market known for flying fish, local crafts, and the original Starbucks."
+                    },
+                    {
+                        "title": "Museum of Pop Culture",
+                        "description": "The Museum of Pop Culture (MoPOP) is a leading-edge nonprofit museum dedicated to contemporary popular culture."
+                    }
+                ]
+            }
+        },
+        "dubai_indoor": {
+            "web": {
+                "results": [
+                    {
+                        "title": "Dubai Mall",
+                        "description": "The Dubai Mall is the world's largest shopping mall with air-conditioned comfort, featuring an aquarium and indoor attractions."
+                    },
+                    {
+                        "title": "Burj Khalifa",
+                        "description": "Visit the observation deck of Burj Khalifa, the world's tallest building with climate-controlled viewing areas."
+                    }
+                ]
+            }
+        },
+        "london_rainy": {
+            "web": {
+                "results": [
+                    {
+                        "title": "British Museum",
+                        "description": "Explore the British Museum, home to world-famous artifacts and perfect for rainy day activities in London."
+                    },
+                    {
+                        "title": "National Gallery",
+                        "description": "The National Gallery houses one of the world's finest collections of paintings and is free to visit."
+                    }
+                ]
+            }
+        }
+    },
+    "errors": {
+        "rate_limit": {
+            "error": {
+                "code": 429,
+                "message": "Rate limit exceeded"
+            }
+        },
+        "invalid_key": {
+            "error": {
+                "code": 401,
+                "message": "Invalid API key"
+            }
+        },
+        "no_results": {
+            "web": {
+                "results": []
+            }
+        }
+    }
+} 

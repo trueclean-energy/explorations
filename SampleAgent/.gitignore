@@ -12,7 +12,7 @@ out/
 
 # Environment variables
 .env
-
+__pycache__
 # Database files
 weather_agent.db
 *.db

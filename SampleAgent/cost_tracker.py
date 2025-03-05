@@ -12,6 +12,8 @@ class CostTracker:
         self.calls = []
         self.total_tokens = {"input": 0, "output": 0}
         self.total_cost = 0.0
+        self.last_call_info = None  # Store the most recent call info
+        self.operation_stats = {}   # Track stats by operation type
         
         # Cost per 1K tokens (in USD)
         self.COST_PER_1K = {
@@ -34,6 +36,20 @@ class CostTracker:
         self.total_tokens["output"] += output_tokens
         self.total_cost += cost
         
+        # Update operation-specific stats
+        if operation not in self.operation_stats:
+            self.operation_stats[operation] = {
+                "count": 0,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "cost": 0.0
+            }
+        
+        self.operation_stats[operation]["count"] += 1
+        self.operation_stats[operation]["input_tokens"] += input_tokens
+        self.operation_stats[operation]["output_tokens"] += output_tokens
+        self.operation_stats[operation]["cost"] += cost
+        
         # Store call details
         call_info = {
             "timestamp": datetime.now(),
@@ -43,6 +59,7 @@ class CostTracker:
             "cost": cost
         }
         self.calls.append(call_info)
+        self.last_call_info = call_info  # Store the most recent call
         
         return call_info
     
@@ -64,6 +81,7 @@ class CostTracker:
             "total_calls": len(self.calls),
             "total_tokens": self.total_tokens,
             "total_cost": self.total_cost,
+            "operation_stats": self.operation_stats,
             "calls": self.calls
         }
     
@@ -72,6 +90,23 @@ class CostTracker:
         summary = self.get_session_summary()
         print("\nLLM Session Summary:")
         print(f"→ Session duration: {summary['session_duration']}")
-        print(f"→ Total API calls: {summary['total_calls']}")
+        print(f"→ Total LLM API calls: {summary['total_calls']}")
         print(f"→ Total tokens: {summary['total_tokens']['input']} in, {summary['total_tokens']['output']} out")
-        print(f"→ Total cost: ${summary['total_cost']:.6f}") 
+        print(f"→ Total cost: ${summary['total_cost']:.6f}")
+        
+        # Print operation-specific stats if there are any operations
+        if self.operation_stats:
+            print("\nBreakdown by operation:")
+            for op, stats in sorted(self.operation_stats.items(), key=lambda x: x[1]['count'], reverse=True):
+                print(f"  • {op}: {stats['count']} calls, {stats['input_tokens'] + stats['output_tokens']} tokens, ${stats['cost']:.6f}")
+    
+    def print_detailed_summary(self):
+        """Print a very detailed summary with all calls"""
+        self.print_session_summary()
+        
+        print("\nDetailed LLM call history:")
+        for i, call in enumerate(self.calls):
+            print(f"Call {i+1} - {call['operation']} at {call['timestamp'].strftime('%H:%M:%S')}")
+            print(f"  Tokens: {call['input_tokens']} in, {call['output_tokens']} out")
+            print(f"  Cost: ${call['cost']:.6f}")
+            print("") 
